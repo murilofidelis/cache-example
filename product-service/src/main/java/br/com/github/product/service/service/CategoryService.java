@@ -1,6 +1,7 @@
 package br.com.github.product.service.service;
 
 import br.com.github.product.service.dto.CategoryDTO;
+import br.com.github.product.service.dto.CategoryFilterDTO;
 import br.com.github.product.service.exception.NotFoundException;
 import br.com.github.product.service.mapper.CategoryMapper;
 import br.com.github.product.service.repository.CategoryRepository;
@@ -23,7 +24,7 @@ public class CategoryService {
     }
 
     @CacheEvict(
-            value = "categories",
+            value = {"categories", "categoriesFilter"},
             allEntries = true
     )
     public CategoryDTO create(CategoryDTO category) {
@@ -48,7 +49,7 @@ public class CategoryService {
             keyGenerator = "categoryUpdateKeyGenerator"
     )
     @CacheEvict(
-            value = "categories",
+            value = {"categories", "categoriesFilter"},
             allEntries = true
     )
     public CategoryDTO update(CategoryDTO category) {
@@ -64,4 +65,13 @@ public class CategoryService {
         return mapper.toListDto(repository.findAll());
     }
 
+    @Cacheable(
+            value = "categoriesFilter",
+            cacheNames = "categoriesFilter",
+            keyGenerator = "categoriesFilterKeyGenerator",
+            cacheManager = "myCustomCacheManager"
+    )
+    public List<CategoryDTO> findByFilter(CategoryFilterDTO filter) {
+        return mapper.toListDto(repository.findByFilter(filter.getDescription(), filter.getCod(), filter.isStatus()));
+    }
 }

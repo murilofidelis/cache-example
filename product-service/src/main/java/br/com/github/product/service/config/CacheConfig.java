@@ -1,6 +1,7 @@
 package br.com.github.product.service.config;
 
 import br.com.github.product.service.dto.CategoryDTO;
+import br.com.github.product.service.dto.CategoryFilterDTO;
 import br.com.github.product.service.properties.RedisProperties;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -78,6 +79,13 @@ public class CacheConfig extends CachingConfigurerSupport {
         };
     }
 
+    @Bean("categoriesFilterKeyGenerator")
+    public KeyGenerator categoriesFilterKeyGenerator() {
+        return (o, method, objects) -> {
+            var filter = (CategoryFilterDTO) objects[0];
+            return String.format("status:%s", filter.isStatus());
+        };
+    }
 
     @Bean(name = "myCustomCacheManager")
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -102,10 +110,17 @@ public class CacheConfig extends CachingConfigurerSupport {
                         .fromSerializer(new Jackson2JsonRedisSerializer<>(List.class)))
                 .prefixKeysWith("myCache::categories:");
 
+        var categoriesFilterCacheManager = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(60))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(List.class)))
+                .prefixKeysWith("myCache::categoriesFilter:");
+
         Map<String, RedisCacheConfiguration> map = new HashMap<>();
         map.put("category", categoryCacheManager);
         map.put("categoryUpdate", categoryUpdateCacheManager);
         map.put("categories", categoriesCacheManager);
+        map.put("categoriesFilter", categoriesFilterCacheManager);
 
         return RedisCacheManager.RedisCacheManagerBuilder.fromCacheWriter(redisCacheWriter)
                 .withInitialCacheConfigurations(map)

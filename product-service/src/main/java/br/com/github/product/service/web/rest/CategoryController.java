@@ -1,6 +1,7 @@
 package br.com.github.product.service.web.rest;
 
 import br.com.github.product.service.dto.CategoryDTO;
+import br.com.github.product.service.dto.CategoryFilterDTO;
 import br.com.github.product.service.service.CategoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,15 @@ public class CategoryController {
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getById(@PathVariable("id") long id) {
         return new ResponseEntity<>(service.getById(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<CategoryDTO>> findByFilter(CategoryFilterDTO filter) {
+        List<CategoryDTO> categories = service.findByFilter(filter);
+        if (categories.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 
     @GetMapping
