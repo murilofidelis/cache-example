@@ -5,7 +5,6 @@ import br.com.github.product.service.mapper.ProductMapper;
 import br.com.github.product.service.repository.CacheRepository;
 import br.com.github.product.service.repository.ProductRepository;
 import br.com.github.product.service.repository.impl.CacheRepositoryImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,7 +58,4 @@ public class ProductService {
         }
     }
 
-    public List<ProductDTO> findByParams(String manufacturer) {
-        return null;
-    }
 }
