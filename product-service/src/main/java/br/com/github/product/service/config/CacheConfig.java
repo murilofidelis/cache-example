@@ -3,6 +3,7 @@ package br.com.github.product.service.config;
 import br.com.github.product.service.dto.CategoryDTO;
 import br.com.github.product.service.dto.CategoryFilterDTO;
 import br.com.github.product.service.properties.RedisProperties;
+import io.lettuce.core.ClientOptions;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
@@ -59,6 +60,14 @@ public class CacheConfig extends CachingConfigurerSupport {
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         return template;
+    }
+
+    @Bean
+    public ClientOptions clientOptions(){
+        return ClientOptions.builder()
+                .disconnectedBehavior(ClientOptions.DisconnectedBehavior.REJECT_COMMANDS)
+                .autoReconnect(true)
+                .build();
     }
 
     @Bean(name = "stringRedisSerializer")
@@ -133,25 +142,25 @@ public class CacheConfig extends CachingConfigurerSupport {
             @Override
             public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
                 logger.log(Level.SEVERE, "Failure getting from cache: {0}", cache.getName());
-                logger.log(Level.SEVERE, "{}", exception.toString());
+                logger.log(Level.SEVERE, "{}", exception);
             }
 
             @Override
             public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
                 logger.log(Level.SEVERE, "Failure putting into cache: {0}", cache.getName());
-                logger.log(Level.SEVERE, "{}", exception.toString());
+                logger.log(Level.SEVERE, "{0}", exception);
             }
 
             @Override
             public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
-                logger.log(Level.SEVERE, "Failure evicting from cache: {0}", cache.getName());
-                logger.log(Level.SEVERE, "{}", exception.toString());
+                logger.log(Level.SEVERE, "Failure evicting from cache: {0} :{1}", cache.getName());
+                logger.log(Level.SEVERE, "{}", exception);
             }
 
             @Override
             public void handleCacheClearError(RuntimeException exception, Cache cache) {
                 logger.log(Level.SEVERE, "Failure clearing cache: {0}", cache.getName());
-                logger.log(Level.SEVERE, "{}", exception.toString());
+                logger.log(Level.SEVERE, "{}", exception);
             }
         };
     }
