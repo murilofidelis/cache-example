@@ -1,0 +1,1 @@
+/usr/lib/jvm/java-1.11.0-openjdk-amd64/bin/java -Dspring.profiles.active=dev -jar target/application.jar --PORT=8082

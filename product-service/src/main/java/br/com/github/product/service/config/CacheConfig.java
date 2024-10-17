@@ -3,6 +3,7 @@ package br.com.github.product.service.config;
 import br.com.github.product.service.dto.CategoryDTO;
 import br.com.github.product.service.dto.CategoryFilterDTO;
 import br.com.github.product.service.properties.RedisProperties;
+import br.com.github.product.service.subscriber.OrderEventListener;
 import io.lettuce.core.ClientOptions;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -21,6 +22,9 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -37,6 +41,25 @@ import java.util.logging.Logger;
 public class CacheConfig extends CachingConfigurerSupport {
 
     private static final Logger logger = Logger.getLogger(CacheConfig.class.getName());
+
+    @Bean
+    public ChannelTopic channelTopic() {
+        return new ChannelTopic("my_topic");
+    }
+
+    @Bean
+    public RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory, ChannelTopic topic) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(messageListener(), topic);
+        return container;
+    }
+
+    @Bean
+    public MessageListenerAdapter messageListener() {
+        return new MessageListenerAdapter(new OrderEventListener());
+    }
+
 
     @Profile("!dev")
     @Bean("connectionFactory")
@@ -63,7 +86,7 @@ public class CacheConfig extends CachingConfigurerSupport {
     }
 
     @Bean
-    public ClientOptions clientOptions(){
+    public ClientOptions clientOptions() {
         return ClientOptions.builder()
                 .disconnectedBehavior(ClientOptions.DisconnectedBehavior.REJECT_COMMANDS)
                 .autoReconnect(true)
